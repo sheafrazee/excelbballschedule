@@ -256,6 +256,7 @@
     <span class="status" id="status"></span>
     <span class="edit-only" style="margin-left:auto;gap:10px">
       <button class="btn primary edit-only" id="publishBtn">↑ Publish to GitHub</button>
+      <button class="btn edit-only" id="quickAddTopBtn">⚡ Quick Add Day</button>
       <button class="btn edit-only" id="settingsBtn">⚙ Settings</button>
       <button class="btn ghost edit-only" id="viewLinkBtn">🔗 Copy view-only link</button>
       <button class="btn ghost edit-only" id="exportBtn">Export</button>
@@ -1280,6 +1281,11 @@ function parseQuickInput(rawText){
 }
 
 $('#quickAddBtn').addEventListener('click',()=>{
+  $('#qaInput').value=''; $('#qaFeedback').textContent='';
+  $('#qaModal').classList.add('show');
+  setTimeout(()=>$('#qaInput').focus(),80);
+});
+$('#quickAddTopBtn').addEventListener('click',()=>{
   $('#qaInput').value=''; $('#qaFeedback').textContent='';
   $('#qaModal').classList.add('show');
   setTimeout(()=>$('#qaInput').focus(),80);
