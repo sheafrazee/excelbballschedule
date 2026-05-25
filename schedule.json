@@ -1,0 +1,543 @@
+{
+  "label": "Week of May 11",
+  "days": [
+    {
+      "day": "Monday",
+      "date": "May 25",
+      "groups": [
+        {
+          "type": "excel",
+          "players": [
+            "Colby Jones",
+            "Dariq Whitehead",
+            "Nick Davidson",
+            "Jurian Dixon"
+          ],
+          "rows": [
+            [
+              "7:30-8am",
+              "Warmup"
+            ],
+            [
+              "8-9:30",
+              "On Court"
+            ],
+            [
+              "9:30-10:30am",
+              "Lift"
+            ],
+            [
+              "10:30-11:30am",
+              "PT"
+            ]
+          ],
+          "note": ""
+        },
+        {
+          "type": "excel",
+          "players": [
+            "Karim Lopez"
+          ],
+          "rows": [
+            [
+              "7:30am",
+              "Pickup"
+            ],
+            [
+              "8-8:30am",
+              "Breakfast Pickup"
+            ],
+            [
+              "8:30-9:30am",
+              "Warmup + Lift"
+            ],
+            [
+              "9:30-11am",
+              "On Court"
+            ],
+            [
+              "11am-12pm",
+              "PT"
+            ]
+          ],
+          "note": ""
+        },
+        {
+          "type": "excel",
+          "players": [
+            "Hudson Greer",
+            "Trent Sisley",
+            "Jaden Newell",
+            "Nick Janowski"
+          ],
+          "rows": [
+            [
+              "9am",
+              "Pickup"
+            ],
+            [
+              "9:30-10am",
+              "Breakfast"
+            ],
+            [
+              "10-11am",
+              "Warmup + Lift"
+            ],
+            [
+              "11am-12:30pm",
+              "On Court"
+            ],
+            [
+              "12:30-1:30pm",
+              "PT"
+            ]
+          ],
+          "note": "Hudson Greer — 9:34am SNA arrival"
+        },
+        {
+          "type": "other",
+          "players": [
+            "Ty Jerome"
+          ],
+          "rows": [],
+          "note": "Ty Jerome — 1pm Court Time"
+        }
+      ]
+    },
+    {
+      "day": "Tuesday",
+      "date": "May 26",
+      "groups": [
+        {
+          "type": "excel",
+          "players": [],
+          "rows": [
+            [
+              "1.)",
+              "Karim Lopez"
+            ],
+            [
+              "2.)",
+              "Colby Jones"
+            ],
+            [
+              "3.)",
+              "Nick Davidson"
+            ],
+            [
+              "4.)",
+              "Jurian Dixon"
+            ],
+            [
+              "5.)",
+              "Dariq Whithead"
+            ],
+            [
+              "6.)",
+              "Jaden Newell"
+            ],
+            [
+              "7.)",
+              "Hudson Greer"
+            ],
+            [
+              "8.)",
+              "Trent Sisley"
+            ],
+            [
+              "9.)",
+              "Elmarko Jackson (arrives 9:35am SNA)"
+            ],
+            [
+              "10.)",
+              "Jackson McAndrew"
+            ],
+            [
+              "11.)",
+              "Brett Decker"
+            ],
+            [
+              "12.)",
+              "Nick Janowski"
+            ]
+          ],
+          "note": ""
+        },
+        {
+          "type": "excel",
+          "players": [
+            "Colby",
+            "Nick",
+            "Jurian",
+            "Jaden",
+            "Hudson",
+            "Trent",
+            "Brett",
+            "Nick"
+          ],
+          "rows": [
+            [
+              "7am",
+              "Pickup"
+            ],
+            [
+              "7:15-7:45am",
+              "Breakfast"
+            ],
+            [
+              "7:45am-8am",
+              "Warmup"
+            ],
+            [
+              "8-10am",
+              "On Court"
+            ],
+            [
+              "10-11am",
+              "Lift"
+            ],
+            [
+              "11am-12pm",
+              "PT"
+            ],
+            [
+              "12pm",
+              "Lunch"
+            ],
+            [
+              "8:30-9am",
+              "Breakfast"
+            ],
+            [
+              "9-10am",
+              "Warmup + Lift"
+            ],
+            [
+              "10-11:30am",
+              "On Court"
+            ],
+            [
+              "11:30am-12:30pm",
+              "PT"
+            ],
+            [
+              "12:30pm",
+              "Lunch"
+            ],
+            [
+              "7:30am",
+              "Pickup"
+            ],
+            [
+              "8-9am",
+              "PT"
+            ],
+            [
+              "9-10am",
+              "Lift"
+            ],
+            [
+              "10-11:30",
+              "On Court"
+            ],
+            [
+              "12pm",
+              "Lunch"
+            ],
+            [
+              "9:30am",
+              "Pickup"
+            ],
+            [
+              "10-10:30am",
+              "Breakfast"
+            ],
+            [
+              "10:30-11:30am",
+              "Warmup + Lift"
+            ],
+            [
+              "11:30am-1pm",
+              "On Court"
+            ],
+            [
+              "1-2pm",
+              "PT"
+            ],
+            [
+              "2pm",
+              "Lunch"
+            ],
+            [
+              "7am",
+              "Pickup"
+            ],
+            [
+              "7:15-7:45am",
+              "Breakfast"
+            ],
+            [
+              "7:45am-8am",
+              "Warmup"
+            ],
+            [
+              "8-10am",
+              "On Court"
+            ],
+            [
+              "10-11am",
+              "PT Screen"
+            ],
+            [
+              "11am-12pm",
+              "Lift"
+            ],
+            [
+              "12pm",
+              "Lunch"
+            ],
+            [
+              "7am",
+              "Pickup"
+            ],
+            [
+              "7:15-7:45am",
+              "Breakfast"
+            ],
+            [
+              "7:45am-8am",
+              "Warmup"
+            ],
+            [
+              "8-10am",
+              "On Court"
+            ],
+            [
+              "10-11am",
+              "Lift"
+            ],
+            [
+              "11am-12pm",
+              "PT"
+            ],
+            [
+              "12pm",
+              "Lunch"
+            ],
+            [
+              "2-3pm",
+              "PT Screen"
+            ],
+            [
+              "9:35am",
+              "Pickup from SNA"
+            ],
+            [
+              "10-10:30am",
+              "Breakfast"
+            ],
+            [
+              "10:30-11:30am",
+              "Warmup + Lift"
+            ],
+            [
+              "11:30am-1pm",
+              "On Court"
+            ],
+            [
+              "1-2pm",
+              "PT"
+            ],
+            [
+              "2-3pm",
+              "Lunch"
+            ],
+            [
+              "3-4pm",
+              "PT Screen"
+            ]
+          ],
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "nextWeek": {
+    "label": "Week of May 25",
+    "days": [
+      {
+        "day": "Monday",
+        "date": "May 25",
+        "groups": [
+          {
+            "type": "excel",
+            "players": [
+              "Devin Askew",
+              "Braylon Mullins"
+            ],
+            "rows": [
+              [
+                "7:30am",
+                "Pickup"
+              ],
+              [
+                "8-8:30am",
+                "Breakfast"
+              ],
+              [
+                "8:30-9:30am",
+                "Warmup + Lift"
+              ],
+              [
+                "9:30-10:45am",
+                "On Court"
+              ],
+              [
+                "11am-12pm",
+                "PT"
+              ],
+              [
+                "12pm",
+                "Lunch"
+              ]
+            ],
+            "note": ""
+          },
+          {
+            "type": "excel",
+            "players": [
+              "Dariq Whitehead",
+              "KJ Evans",
+              "Colby Jones",
+              "Nick Davidson"
+            ],
+            "rows": [
+              [
+                "7:15am",
+                "Pickup"
+              ],
+              [
+                "7:45-8:15am",
+                "Warmup"
+              ],
+              [
+                "8:15-9:30am",
+                "On Court"
+              ],
+              [
+                "9:30-10am",
+                "Breakfast"
+              ],
+              [
+                "10-11am",
+                "Lift"
+              ],
+              [
+                "11am-12pm",
+                "PT"
+              ],
+              [
+                "12pm",
+                "Lunch"
+              ]
+            ],
+            "note": ""
+          },
+          {
+            "type": "excel",
+            "players": [
+              "Jurian Dixon",
+              "Kayden Mingo",
+              "Dre Bullock"
+            ],
+            "rows": [
+              [
+                "8:30am",
+                "Pickup"
+              ],
+              [
+                "9-9:45am",
+                "Breakfast"
+              ],
+              [
+                "9:45-10:45am",
+                "Warmup + Lift"
+              ],
+              [
+                "10:45am-12pm",
+                "On Court"
+              ],
+              [
+                "12-1pm",
+                "Lunch"
+              ],
+              [
+                "1-2pm",
+                "PT"
+              ]
+            ],
+            "note": ""
+          },
+          {
+            "type": "excel",
+            "players": [
+              "Zyon Hawthorne",
+              "Braydon Hawthorne"
+            ],
+            "rows": [
+              [
+                "10am",
+                "Pickup"
+              ],
+              [
+                "10:30-11am",
+                "Breakfast"
+              ],
+              [
+                "11am-12pm",
+                "Warmup + Lift"
+              ],
+              [
+                "12-1:15pm",
+                "On Court"
+              ],
+              [
+                "1:15-2pm",
+                "PT"
+              ],
+              [
+                "2pm",
+                "Lunch"
+              ]
+            ],
+            "note": ""
+          },
+          {
+            "type": "other",
+            "players": [
+              "Ousmane Dieng",
+              "Ty Jerome"
+            ],
+            "rows": [
+              [
+                "12-1:15pm",
+                "Warmup + Lift"
+              ],
+              [
+                "1:15-2:30pm",
+                "On Court"
+              ]
+            ],
+            "note": "NBA guys can book their own lifting times/PT slots directly with coaches."
+          }
+        ]
+      },
+      {
+        "day": "Tuesday",
+        "date": "May 26",
+        "groups": []
+      }
+    ]
+  },
+  "archive": []
+}
