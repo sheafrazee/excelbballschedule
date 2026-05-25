@@ -167,6 +167,62 @@
   .share-drop.open{display:flex}
   .share-opt{background:transparent;border:0;padding:10px 13px;text-align:left;font:600 13px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;color:var(--ink);cursor:pointer;border-radius:7px;display:flex;align-items:center;gap:9px}
   .share-opt:hover{background:var(--surface)}
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:900px){
+    .bar-in{gap:12px;padding:12px 16px}
+    .row2{padding:0 16px}
+    .searchwrap{padding:0 16px}
+    .searchnote{padding:0 16px}
+    .week{padding:0 16px;gap:14px}
+    .week-foot{padding:0 16px}
+    .legend{padding:0 16px}
+    .groups{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  }
+  @media(max-width:600px){
+    body{padding:0 0 60px}
+    /* bar */
+    .bar-in{padding:10px 14px;gap:8px;flex-wrap:wrap}
+    .brand img{height:34px}
+    .brand h1{font-size:20px}
+    .brand h1 small{display:none}
+    .seg button{padding:7px 11px;font-size:12px}
+    /* slot tabs wrap below brand */
+    #slotSeg{width:100%;order:10}
+    #slotSeg button{flex:1;text-align:center;justify-content:center}
+    /* toolbar row2 */
+    .row2{flex-wrap:wrap;gap:8px;padding:0 14px;margin-top:10px}
+    .btn{padding:7px 12px;font-size:12px}
+    /* content */
+    .searchwrap{padding:0 14px;margin-top:12px}
+    .searchnote{padding:0 14px}
+    .week{padding:0 14px;gap:12px;margin-top:14px}
+    .week-foot{padding:0 14px;gap:8px}
+    .legend{padding:0 14px}
+    /* days */
+    .day-head{padding:12px 14px}
+    .day-head .dn{font-size:20px}
+    .groups{grid-template-columns:1fr;padding:12px}
+    .groups{gap:10px}
+    .bar .time{width:46%}
+    /* week-foot buttons */
+    .addbtn{padding:10px 12px;font-size:12px}
+    /* modals → bottom sheet */
+    .modal{padding:0;align-items:flex-end}
+    .sheet{border-radius:20px 20px 0 0;max-width:100%;max-height:92vh;border-bottom:0}
+    .sheet-foot{flex-wrap:wrap}
+    .sheet-foot .btn{flex:1 1 auto;text-align:center;justify-content:center}
+    /* share drop */
+    .share-drop{min-width:160px}
+    .share-opt{padding:12px 13px;font-size:14px}
+  }
+  @media(max-width:380px){
+    .brand h1{font-size:17px}
+    .seg button{padding:6px 9px;font-size:11px}
+    .btn{padding:6px 10px;font-size:11px}
+    .addbtn{padding:9px 10px;font-size:11px}
+    .day-head .dn{font-size:18px}
+  }
 </style>
 </head>
 <body class="mode-view">
@@ -190,7 +246,8 @@
       <button class="btn" id="weekShareBtn">📤 Share Week</button>
       <div class="share-drop" id="weekShareDrop">
         <button class="share-opt" data-share="week-img">📷 Share as image</button>
-        <button class="share-opt" data-share="week-text">📋 Copy text roster</button>
+        <button class="share-opt" data-share="week-text">📋 Copy text</button>
+        <button class="share-opt" data-share="week-ics">📅 Export to Calendar</button>
       </div>
     </div>
     <button class="btn" id="archiveBtn" title="Past weeks">🗄 Archive</button>
@@ -216,7 +273,7 @@
 <div class="legend" id="legend"></div>
 
 <div class="week" id="week"></div>
-<div class="week-foot"><button class="addbtn" id="addDayBtn">+ Add Day</button><button class="addbtn edit-only" id="seedNextBtn" title="Copy current week structure into Next Week">⧉ Seed from current</button><button class="addbtn edit-only" id="promoteBtn" title="Archive current week and make Next Week live">→ Promote Next → Current</button></div>
+<div class="week-foot"><button class="addbtn" id="addDayBtn">+ Add Day</button><button class="addbtn edit-only" id="quickAddBtn">⚡ Quick Add</button><button class="addbtn edit-only" id="seedNextBtn" title="Copy current week structure into Next Week">⧉ Seed from current</button><button class="addbtn edit-only" id="promoteBtn" title="Archive current week and make Next Week live">→ Promote Next → Current</button></div>
 
 <div class="empty hide" id="empty">No schedule yet. Switch to <b>Edit</b> and add a day.</div>
 
@@ -245,6 +302,35 @@
 </div>
 <!-- image viewer -->
 <div class="modal" id="imgModal"><div class="sheet" style="max-width:90vw;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 id="imgTitle" style="font-size:22px"></h2><button class="btn ghost" id="imgClose">✕</button></div><img id="imgView" style="width:100%;border-radius:8px;display:block"></div></div>
+
+<!-- quick-add modal -->
+<div class="modal" id="qaModal">
+  <div class="sheet" style="max-width:540px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2 style="font-size:22px">⚡ Quick Add</h2>
+      <button class="btn ghost" id="qaClose">✕</button>
+    </div>
+    <p class="sub" style="margin-bottom:14px">Paste one or more days in roster format. Each day header (<b>Monday, May 25</b>) starts a new day. Matching days are replaced.</p>
+    <textarea id="qaInput" rows="14" spellcheck="false" style="width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font:500 13px/1.6 'SF Mono',ui-monospace,monospace;color:var(--ink);background:#fafafa;resize:vertical;box-sizing:border-box;outline:none" placeholder="Monday, May 25
+Karim Lopez
+Hannes Steinbach
+Ty Jerome (1pm Court Time)
+
+Karim/Hannes
+7:30am Pickup
+8:30-9:30am Warmup + Lift
+9:30-11am On Court
+
+Colby/Dariq
+8-9:30am On Court
+9:30-10:30am Lift"></textarea>
+    <div id="qaFeedback" style="min-height:18px;font-size:13px;font-weight:600;margin:10px 0;color:var(--gray)"></div>
+    <div class="sheet-foot">
+      <button class="btn ghost" id="qaCancel">Cancel</button>
+      <button class="btn primary" id="qaApply">⚡ Add to Schedule</button>
+    </div>
+  </div>
+</div>
 
 <!-- settings modal -->
 <div class="modal" id="modal">
@@ -360,6 +446,7 @@ async function ghPublish(){
 
 /* ============================================================= RENDER */
 function render(){
+  if(typeof IMG_CACHE!=='undefined')IMG_CACHE.clear();  // invalidate prerendered share images
   const wk=ed();  // Get active week (current or next)
   // slot selector buttons (edit mode only)
   const slotSeg=$('#slotSeg');
@@ -392,7 +479,8 @@ function render(){
           <button class="dr" data-act="openShare" data-di="${di}">📤 Share</button>
           <div class="share-drop" id="dayShare-${di}">
             <button class="share-opt" data-share="day-img" data-di="${di}">📷 Share as image</button>
-            <button class="share-opt" data-share="day-text" data-di="${di}">📋 Copy text roster</button>
+            <button class="share-opt" data-share="day-text" data-di="${di}">📋 Copy text</button>
+            <button class="share-opt" data-share="day-ics" data-di="${di}">📅 Export to Calendar</button>
           </div>
         </div>
       </div>`;
@@ -513,6 +601,7 @@ function bindCardEvents(){
   $$('#week [data-act]').forEach(el=>el.addEventListener('click',()=>{
     const {act,di,gi,ri}=el.dataset;
     if(act==='dayRoster'){openDayRoster(+di);return;}
+    if(act==='openShare')return;   // handled by its own listener; must NOT trigger render()
     const wk=ed();
     if(act==='addGroup')wk.days[+di].groups.push({type:'excel',players:[],rows:[['','']],note:''});
     else if(act==='dupGroup')wk.days[+di].groups.splice(+gi+1,0,clone(wk.days[+di].groups[+gi]));
@@ -528,24 +617,28 @@ function bindCardEvents(){
   $$('#week [data-act="openShare"]').forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const drop=$(`#dayShare-${btn.dataset.di}`);
+      const di=btn.dataset.di;
+      const drop=$(`#dayShare-${di}`);
       const wasOpen=drop&&drop.classList.contains('open');
       closeShareMenus(null);
-      if(drop&&!wasOpen)drop.classList.add('open');
+      if(drop&&!wasOpen){drop.classList.add('open');prewarmImage('day-'+di,btn.closest('.day'));}  // start rendering now
     });
   });
   $$('#week .share-opt[data-share^="day"]').forEach(btn=>{
     btn.addEventListener('click',async e=>{
       e.stopPropagation();
-      closeShareMenus(null);
       const di=+btn.dataset.di;
+      const dayEl=btn.closest('.day');
+      closeShareMenus(null);
       const day=(ed().days||[])[di];
       if(!day)return;
+      const dtitle=day.day+(day.date?' '+day.date:'');
       if(btn.dataset.share==='day-img'){
-        const dayEl=btn.closest('.day');
-        await shareAsImage(dayEl);
+        await shareAsImage('day-'+di,dayEl,dtitle);
       }else if(btn.dataset.share==='day-text'){
-        await shareAsText(buildDayText(day));
+        await shareAsText(buildDayText(day),dtitle);
+      }else if(btn.dataset.share==='day-ics'){
+        await exportICS(dayEvents(day),'training-'+(day.day||'day').toLowerCase()+'.ics',dtitle);
       }
     });
   });
@@ -614,7 +707,28 @@ function ensureSortable(){
   })(0);
 }
 
-/* ============================================================= TOP CONTROLS */
+/* Ensure html2canvas is available; retry across CDNs if the head <script> failed. */
+function ensureHtml2canvas(){
+  if(window.html2canvas) return Promise.resolve(true);
+  if(window.__h2cP) return window.__h2cP;
+  const cdns=[
+    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+  ];
+  window.__h2cP=new Promise(resolve=>{
+    (function tryNext(i){
+      if(window.html2canvas){resolve(true);return;}
+      if(i>=cdns.length){resolve(false);return;}
+      const s=document.createElement('script');
+      s.src=cdns[i];
+      s.onload=()=>resolve(true);
+      s.onerror=()=>tryNext(i+1);
+      document.head.appendChild(s);
+    })(0);
+  });
+  return window.__h2cP;
+}
 $('#modeSeg').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   mode=b.dataset.mode;$$('#modeSeg button').forEach(x=>x.classList.toggle('on',x===b));
@@ -626,7 +740,17 @@ $('#modeSeg').addEventListener('click',e=>{
 });
 // Slot switcher (Current Week / Next Week in edit mode)
 $$('#slotSeg button').forEach(b=>b.addEventListener('click',()=>{
-  editSlot=b.dataset.slot; render();
+  const slot=b.dataset.slot;
+  // When switching to Next Week and it's empty, auto-populate Mon–Fri with next-week dates
+  if(slot==='next'&&(!DATA.nextWeek||(DATA.nextWeek.days||[]).length===0)){
+    const nw=nextCalWeek();
+    DATA.nextWeek={label:nw.label, days: nw.dates.slice(0,5).map(d=>({
+      day:['Monday','Tuesday','Wednesday','Thursday','Friday'][nw.dates.indexOf(d)],
+      date:MON[d.getMonth()]+' '+d.getDate(), groups:[]
+    }))};
+    saveDraft();
+  }
+  editSlot=slot; render();
 }));
 $('#search').addEventListener('input',e=>{query=e.target.value;render();});
 
@@ -641,11 +765,13 @@ $('#addDayBtn').addEventListener('click',()=>{
 $('#seedNextBtn').addEventListener('click',()=>{
   const hasNext=DATA.nextWeek&&(DATA.nextWeek.days||[]).length;
   if(hasNext&&!confirm('Overwrite existing Next Week with a fresh copy of Current Week?'))return;
-  DATA.nextWeek={label:'',days:JSON.parse(JSON.stringify(DATA.days||[]))};
-  (DATA.nextWeek.days||[]).forEach(d=>{d.date='';}); // clear dates, keep group structure
+  const nw=nextCalWeek();
+  const days=JSON.parse(JSON.stringify(DATA.days||[]));
+  relabelToNextWeek(days);   // auto-fill next week's dates
+  DATA.nextWeek={label:nw.label, days};
   editSlot='next';
   saveDraft();render();
-  setStatus('Next Week seeded from current — dates cleared, ready to customize.','ok');
+  setStatus('Next Week seeded — dates auto-set to next week.','ok');
 });
 
 /* Promote Next Week to Current (archive old week, make next live) */
@@ -711,6 +837,36 @@ function weekDates(d){
   const range=`${MON[mon.getMonth()]} ${mon.getDate()} – ${MON[sun.getMonth()]} ${sun.getDate()}, ${sun.getFullYear()}`;
   return {mon,sun,key,range};
 }
+
+// Returns the 7 Date objects for next calendar week (Mon–Sun) + a week label.
+function nextCalWeek(){
+  const w=weekDates(new Date());
+  const nextMon=new Date(w.mon); nextMon.setDate(nextMon.getDate()+7);
+  const dates=[];
+  for(let i=0;i<7;i++){const d=new Date(nextMon);d.setDate(nextMon.getDate()+i);dates.push(d);}
+  const mon=dates[0], sun=dates[6];
+  const label=`Week of ${MON[mon.getMonth()]} ${mon.getDate()}`;
+  return {dates, label};
+}
+
+// Re-date a cloned days array: matches each day's weekday name to next week's
+// calendar date and fills in the .date field ("May 26", "May 27" …).
+function relabelToNextWeek(days){
+  const nw=nextCalWeek();
+  // Map JS getDay() (0=Sun) to our dates array index (0=Mon)
+  // nw.dates[0]=Mon…nw.dates[6]=Sun
+  const WD_TO_IDX={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+  const byDayName={'monday':0,'tuesday':1,'wednesday':2,'thursday':3,'friday':4,'saturday':5,'sunday':6,
+                   'mon':0,'tue':1,'wed':2,'thu':3,'fri':4,'sat':5,'sun':6};
+  days.forEach(day=>{
+    const lower=(day.day||'').toLowerCase();
+    const key=Object.keys(byDayName).find(k=>lower===k||lower.startsWith(k.slice(0,3)));
+    if(key!=null){
+      const d=nw.dates[byDayName[key]];
+      if(d) day.date=MON[d.getMonth()]+' '+d.getDate();
+    }
+  });
+}
 function rawUrl(path){const c=ghCfg();return `https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch||'main'}/${path}`;}
 
 async function ghPutFile(path,b64,msg){
@@ -757,6 +913,8 @@ function renderArchiveList(filter){
   list.innerHTML=show.map(a=>`<button class="archive-item" data-path="${esc(a.path)}" data-range="${esc(a.range)}">
      <span class="ai-range">${esc(a.range)}</span><span class="ai-go">View →</span></button>`).join('')||'<div class="empty" style="padding:24px">No match.</div>';
   $$('#archiveList .archive-item').forEach(b=>b.addEventListener('click',()=>{
+    const fb=document.getElementById('imgFallbackBox'); if(fb)fb.style.display='none';
+    const v=$('#imgView'); v.style.maxHeight=''; v.style.objectFit='';
     $('#imgTitle').textContent=b.dataset.range;
     $('#imgView').src=rawUrl(b.dataset.path)+'?t='+Date.now();
     $('#imgModal').classList.add('show');
@@ -867,31 +1025,149 @@ function buildDayText(day){
 function buildWeekText(){
   return (ed().days||[]).map(d=>buildDayText(d)).filter(Boolean).join('\n\n---\n\n');
 }
-async function shareAsImage(targetEl){
-  if(!window.html2canvas){setStatus('Image library loading — try again','err');return;}
-  setStatus('Capturing…','busy');
-  try{
-    const canvas=await html2canvas(targetEl,{backgroundColor:'#ffffff',scale:2,useCORS:true});
-    canvas.toBlob(async blob=>{
-      const file=new File([blob],'schedule.png',{type:'image/png'});
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-        try{await navigator.share({files:[file],title:'Training Schedule'});setStatus('','');}
-        catch(e){if(e.name!=='AbortError')setStatus('Share cancelled','');}
-      }else{
-        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='schedule.png';a.click();
-        setStatus('✓ Image downloaded','ok');
-      }
-    },'image/png');
-  }catch(e){setStatus('Capture failed: '+e.message,'err');}
+
+/* ---- iCalendar (.ics) export ---- */
+const MONTHS_MAP={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function parseDateStr(dateStr){           // "May 11" / "May 11, 2026" / "5/11" -> {y,m,d} | null
+  if(!dateStr) return null;
+  const s=dateStr.trim(); let mo,day,yr=null;
+  let m=s.match(/([A-Za-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?/);
+  if(m){const k=m[1].slice(0,3).toLowerCase();if(!(k in MONTHS_MAP))return null;mo=MONTHS_MAP[k];day=+m[2];if(m[3])yr=+m[3];}
+  else{m=s.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);if(!m)return null;mo=+m[1]-1;day=+m[2];if(m[3])yr=+m[3]<100?2000+ +m[3]:+m[3];}
+  if(yr==null){const now=new Date();yr=now.getFullYear();const diff=(new Date(yr,mo,day)-now)/864e5;if(diff<-180)yr++;else if(diff>180)yr--;}
+  return {y:yr,m:mo,d:day};
 }
-async function shareAsText(text){
-  if(navigator.share){
-    try{await navigator.share({text,title:'Training Schedule'});return;}
+function to24(h,ap){if(ap==='pm')return h===12?12:h+12;if(ap==='am')return h===12?0:h;return h;}
+function parseTimeRange(timeStr){          // -> {sh,sm,eh,em} 24h (eh/em null if single) | null
+  if(!timeStr) return null;
+  const raw=timeStr.toLowerCase().replace(/\s+/g,'');
+  const parts=raw.split(/[-–]/);
+  const merid=p=>{const m=p.match(/(am|pm)/);return m?m[1]:null;};
+  const hm=p=>{const mm=p.match(/(\d{1,2})(?::(\d{2}))?/);return mm?{h:+mm[1],m:mm[2]?+mm[2]:0,ap:merid(p)}:null;};
+  if(parts.length===1){const a=hm(parts[0]);if(!a)return null;return {sh:to24(a.h,a.ap),sm:a.m,eh:null,em:null};}
+  const a=hm(parts[0]),b=hm(parts[1]); if(!a||!b)return null;
+  let sh=to24(a.h, a.ap||b.ap), eh=to24(b.h, b.ap||a.ap);
+  if(!a.ap && b.ap && (sh*60+a.m)>(eh*60+b.m)) sh=to24(a.h,'am'); // noon-crossing fix
+  return {sh,sm:a.m,eh,em:b.m};
+}
+const pad2=n=>String(n).padStart(2,'0');
+function icsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function icsFold(line){if(line.length<=73)return line;let out='',i=0;while(i<line.length){const n=i===0?73:72;out+=(i===0?'':'\r\n ')+line.slice(i,i+n);i+=n;}return out;}
+function dtFloating(y,mo,d,h,mi){return `${y}${pad2(mo+1)}${pad2(d)}T${pad2(h)}${pad2(mi)}00`;}
+function dayEvents(day){
+  const dt=parseDateStr(day.date); if(!dt) return [];
+  const evs=[];
+  (day.groups||[]).forEach(g=>{
+    const names=(g.players||[]).map(p=>p.split(' ')[0]).join('/');
+    const full=(g.players||[]).join(', ');
+    (g.rows||[]).forEach(r=>{
+      const tr=parseTimeRange(r[0]); if(!tr) return;
+      let eh=tr.eh, em=tr.em;
+      if(eh==null){const t=tr.sh*60+tr.sm+60;eh=Math.floor(t/60)%24;em=t%60;} // single time -> +60min
+      evs.push({
+        start:dtFloating(dt.y,dt.m,dt.d,tr.sh,tr.sm),
+        end:dtFloating(dt.y,dt.m,dt.d,eh,em),
+        summary:(r[1]||'Session')+(names?(' — '+names):''),
+        desc:[full?('Players: '+full):'',g.note||''].filter(Boolean).join('\n')
+      });
+    });
+  });
+  return evs;
+}
+function weekEvents(){const evs=[];(ed().days||[]).forEach(d=>dayEvents(d).forEach(e=>evs.push(e)));return evs;}
+function buildICS(events,calName){
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Excel Training//Schedule//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  if(calName)L.push(icsFold('X-WR-CALNAME:'+icsEscape(calName)));
+  events.forEach((e,i)=>{
+    L.push('BEGIN:VEVENT','UID:'+stamp+'-'+i+'@excel-training','DTSTAMP:'+stamp,'DTSTART:'+e.start,'DTEND:'+e.end);
+    L.push(icsFold('SUMMARY:'+icsEscape(e.summary)));
+    if(e.desc)L.push(icsFold('DESCRIPTION:'+icsEscape(e.desc)));
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n');
+}
+async function exportICS(events,filename,calName){
+  if(!events.length){setStatus('No times with valid dates to export — add a date to the day(s)','err');return;}
+  const ics=buildICS(events,calName);
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const file=new File([blob],filename,{type:'text/calendar'});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:calName});return;}
     catch(e){if(e.name==='AbortError')return;}
   }
-  try{await navigator.clipboard.writeText(text);setStatus('✓ Copied to clipboard','ok');}
-  catch(e){setStatus('Copy failed — try again','err');}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  setStatus('✓ Calendar file downloaded — open it to add the events','ok');
 }
+/* Direct native share. For images we pre-render the PNG the instant the
+   Share menu opens, so by the time "Share as image" is tapped the file is
+   ready and navigator.share() fires synchronously inside the tap — that's
+   what lets iOS show the real AirDrop/Messages/Mail/WhatsApp sheet. */
+function slug(s){return (s||'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().replace(/^-+|-+$/g,'');}
+const IMG_CACHE=new Map();   // key -> {file, promise}; cleared on every render
+function prewarmImage(key,el){
+  if(!el) return Promise.resolve(null);
+  const hit=IMG_CACHE.get(key);
+  if(hit&&hit.promise) return hit.promise;
+  const promise=(async()=>{
+    const ok=await ensureHtml2canvas();
+    if(!ok||!window.html2canvas) return null;
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false});
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    if(!blob) return null;
+    const file=new File([blob],(slug(key)||'schedule')+'.png',{type:'image/png'});
+    IMG_CACHE.set(key,{file,promise});
+    return file;
+  })().catch(()=>null);
+  IMG_CACHE.set(key,{file:null,promise});
+  return promise;
+}
+function downloadFile(file){const u=URL.createObjectURL(file);const a=document.createElement('a');a.href=u;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);}
+function toast(msg,ms){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#231F20;color:#fff;padding:13px 20px;border-radius:12px;font:600 14px/1.35 Helvetica Neue,Arial,sans-serif;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,.32);max-width:84vw;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none';document.body.appendChild(t);}
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(()=>{t.style.opacity='0';}, ms||2400);
+}
+function showImageFallback(file,title){
+  // iOS-reliable path: display the image so the user can long-press to
+  // Save to Photos / Share. Works even when Web Share files is unavailable.
+  const url=URL.createObjectURL(file);
+  $('#imgTitle').textContent=title||'Schedule';
+  const v=$('#imgView'); v.src=url; v.style.maxHeight='62vh'; v.style.objectFit='contain';
+  let box=document.getElementById('imgFallbackBox');
+  if(!box){box=document.createElement('div');box.id='imgFallbackBox';box.style.cssText='margin-top:12px;text-align:center';v.after(box);}
+  box.style.display='block';
+  box.innerHTML='<p style="font-size:13px;color:var(--gray);line-height:1.45;margin-bottom:11px">Press &amp; hold the image for <b>Save to Photos</b> / Share — or tap below.</p>';
+  const dl=document.createElement('button');dl.className='btn primary';dl.textContent='⬇ Save image';
+  dl.addEventListener('click',()=>downloadFile(file));
+  box.appendChild(dl);
+  $('#imgModal').classList.add('show');
+}
+
+async function shareAsImage(key,el,title){
+  let file=(IMG_CACHE.get(key)||{}).file;
+  if(!file){ toast('Preparing image…',1500); file=await prewarmImage(key,el); }
+  if(!file){ toast('Could not build image — try again'); return; }
+  if(navigator.share){
+    try{ await navigator.share({files:[file],title}); return; }   // -> AirDrop/Messages/Mail/WhatsApp
+    catch(e){ if(e.name==='AbortError') return; }                  // user cancelled
+  }
+  // Native file share unavailable/blocked — show the image; long-press to Save/Share (reliable on iOS).
+  showImageFallback(file,title);
+}
+
+async function shareAsText(text,title){
+  if(navigator.share){
+    try{ await navigator.share({text,title}); return; }            // native sheet
+    catch(e){ if(e.name==='AbortError') return; }                  // cancelled — don't also copy
+  }
+  // No share sheet available in this browser -> copy and tell the user clearly.
+  try{ await navigator.clipboard.writeText(text); toast('Copied ✓  Paste into Messages, Mail, or WhatsApp.  (Open in Safari for the share menu.)',3600); }
+  catch(_){ toast('Could not copy — try again'); }
+}
+
 function closeShareMenus(except){
   $$('.share-drop.open').forEach(d=>{if(d!==except)d.classList.remove('open');});
 }
@@ -903,13 +1179,15 @@ $('#weekShareBtn').addEventListener('click',e=>{
   const drop=$('#weekShareDrop');
   const wasOpen=drop.classList.contains('open');
   closeShareMenus(null);
-  if(!wasOpen)drop.classList.add('open');
+  if(!wasOpen){drop.classList.add('open');prewarmImage('week',$('#week'));}  // start rendering now
 });
 $('#weekShareDrop').addEventListener('click',async e=>{
   const btn=e.target.closest('.share-opt');if(!btn)return;
+  const title=(ed().label||'Training')+' — Full Week';
   closeShareMenus(null);
-  if(btn.dataset.share==='week-img')await shareAsImage($('#week'));
-  else if(btn.dataset.share==='week-text')await shareAsText(buildWeekText());
+  if(btn.dataset.share==='week-img')await shareAsImage('week',$('#week'),title);
+  else if(btn.dataset.share==='week-text')await shareAsText(buildWeekText(),title);
+  else if(btn.dataset.share==='week-ics')await exportICS(weekEvents(),'training-week.ics',title);
 });
 
 /* view-only link */
@@ -917,6 +1195,121 @@ $('#viewLinkBtn').addEventListener('click',()=>{
   const url=location.origin+location.pathname;
   navigator.clipboard.writeText(url).then(()=>setStatus('✓ View-only link copied','ok'),
     ()=>setStatus('Copy failed — view link is '+url,'err'));
+});
+
+/* ============================================================= QUICK ADD */
+/* Parses the same text format produced by buildDayText() (and used in the
+   copy/share feature) and returns an array of day objects ready to merge
+   into the current week. */
+function parseQuickInput(rawText){
+  const DAY_IDX={monday:0,mon:0,tuesday:1,tue:1,tues:1,wednesday:2,wed:2,thursday:3,thu:3,thur:3,thurs:3,friday:4,fri:4,saturday:5,sat:5,sunday:6,sun:6};
+  const DAY_FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const results=[];
+  let curDay=null, curRoster=[], curGroup=null;
+
+  function finishGroup(){if(curGroup&&curDay){curDay.groups.push(curGroup);curGroup=null;}}
+  function finishDay(){
+    finishGroup();
+    if(!curDay)return;
+    // Players with notes but not assigned to any group → 'other' group
+    const used=new Set(); curDay.groups.forEach(g=>g.players.forEach(p=>used.add(p)));
+    const unassigned=curRoster.filter(r=>r.note&&!used.has(r.name));
+    if(unassigned.length){
+      curDay.groups.push({type:'other',players:unassigned.map(r=>r.name),rows:[],
+        note:unassigned.map(r=>r.name+(r.note?' — '+r.note:'')).join(' | ')});
+    }
+    results.push(curDay); curDay=null; curRoster=[];
+  }
+
+  // Match a short token back to a full name in the roster
+  function matchName(token,roster){
+    const t=token.trim(); const tl=t.toLowerCase();
+    // Exact
+    const ex=roster.find(r=>r.name.toLowerCase()===tl); if(ex)return ex.name;
+    // First name exact
+    const bf=roster.find(r=>r.name.split(' ')[0].toLowerCase()===tl); if(bf)return bf.name;
+    // First name prefix ("Dev" → "Devin")
+    const bp=roster.find(r=>r.name.split(' ')[0].toLowerCase().startsWith(tl)||tl.startsWith(r.name.split(' ')[0].toLowerCase())); if(bp)return bp.name;
+    // "Nick D" → first name + last initial
+    const parts=tl.split(/\s+/);
+    if(parts.length>=2){
+      const bi=roster.find(r=>{const n=r.name.split(' ');return n[0]&&n[0].toLowerCase()===parts[0]&&n[1]&&n[1][0].toLowerCase()===parts[1][0];});
+      if(bi)return bi.name;
+    }
+    return t; // use as-is
+  }
+
+  const lines=rawText.split('\n');
+  for(let raw of lines){
+    const line=raw.trim(); if(!line)continue;
+
+    // Day header: starts with a day name (optional ", Date")
+    const dayWord=line.split(/[\s,]/)[0].toLowerCase();
+    if(dayWord in DAY_IDX){
+      finishDay();
+      const dateM=line.match(/,?\s*((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\S*\s+\d{1,2}|\d{1,2}\/\d{1,2})/i);
+      curDay={day:DAY_FULL[DAY_IDX[dayWord]],date:dateM?dateM[1].trim():'',groups:[]};
+      curRoster=[]; continue;
+    }
+    if(!curDay)continue;
+
+    // Time row: starts with a digit
+    if(/^\d/.test(line)){
+      if(!curGroup)curGroup={type:'excel',players:[],rows:[],note:''};
+      const m=line.match(/^(\S+)\s*(.*)/); // first token = time, rest = activity
+      curGroup.rows.push([m?m[1]:'',m&&m[2]?m[2].trim():'']);
+      continue;
+    }
+
+    // Group header: contains slash(es) — "Colby/Dariq/Nick D"
+    if(line.includes('/')){
+      finishGroup();
+      const players=line.split('/').map(t=>matchName(t,curRoster));
+      // Carry any individual player notes (e.g. "Hudson Greer — 9:34am arrival") into group note
+      const pNotes=players.map(p=>{const r=curRoster.find(r=>r.name===p);return r&&r.note?p+' — '+r.note:'';}).filter(Boolean);
+      curGroup={type:'excel',players,rows:[],note:pNotes.join(' | ')};
+      continue;
+    }
+
+    // Individual player line: "Karim Lopez" or "Ty Jerome (1pm Court Time)"
+    const pm=line.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    curRoster.push(pm?{name:pm[1].trim(),note:pm[2].trim()}:{name:line,note:''});
+  }
+  finishDay();
+  return results;
+}
+
+$('#quickAddBtn').addEventListener('click',()=>{
+  $('#qaInput').value=''; $('#qaFeedback').textContent='';
+  $('#qaModal').classList.add('show');
+  setTimeout(()=>$('#qaInput').focus(),80);
+});
+function closeQA(){$('#qaModal').classList.remove('show');}
+$('#qaClose').addEventListener('click',closeQA);
+$('#qaCancel').addEventListener('click',closeQA);
+$('#qaModal').addEventListener('click',e=>{if(e.target.id==='qaModal')closeQA();});
+$('#qaApply').addEventListener('click',()=>{
+  const text=$('#qaInput').value.trim();
+  if(!text)return;
+  const parsed=parseQuickInput(text);
+  if(!parsed.length){
+    $('#qaFeedback').textContent='✗ No days found — start each day with its name, e.g. "Monday, May 25"';
+    $('#qaFeedback').style.color='#c0392b'; return;
+  }
+  const wk=ed(); if(!wk.days)wk.days=[];
+  let added=0,replaced=0;
+  for(const pd of parsed){
+    const idx=wk.days.findIndex(d=>d.day.toLowerCase()===pd.day.toLowerCase());
+    if(idx>=0){wk.days[idx]=pd;replaced++;}
+    else{
+      const di=wk.days.findIndex(d=>DAY_ORDER.indexOf(d.day)>DAY_ORDER.indexOf(pd.day));
+      if(di<0)wk.days.push(pd); else wk.days.splice(di,0,pd);
+      added++;
+    }
+  }
+  saveDraft();render();closeQA();
+  const summary=[added&&`${added} day${added!==1?'s':''} added`,replaced&&`${replaced} replaced`].filter(Boolean).join(', ');
+  toast(`✓ ${summary}`,2400);
 });
 
 /* ============================================================= BOOT */
