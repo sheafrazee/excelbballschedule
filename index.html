@@ -232,7 +232,7 @@
   .cal-time-col{width:44px;flex-shrink:0;padding-top:29px}
   .cal-time-tick{font-size:9.5px;font-weight:600;color:var(--gray);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;padding-right:7px;box-sizing:border-box;position:relative;top:-7px;line-height:1}
   .cal-days{display:flex;flex:1;overflow:hidden}
-  .cal-day{flex:1;min-width:80px;position:relative;border-left:1px solid var(--line)}
+  .cal-day{flex:1;min-width:160px;position:relative;border-left:1px solid var(--line)}
   .cal-day-head{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.6px;padding:7px 5px 5px;text-align:center;border-bottom:1px solid var(--line);height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;background:#231F20}
   .cal-day-body{position:relative;cursor:crosshair}
   .cal-ev-ghost{position:absolute;left:2px;right:2px;border-radius:4px;background:rgba(35,31,32,.07);border:1.5px dashed #231F20;z-index:10;pointer-events:none;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:9px;font-weight:700;color:#231F20;padding:2px 5px;overflow:hidden;white-space:nowrap;}
@@ -1454,6 +1454,54 @@ function renderCalEditSection(){
   _calRendering=false;
 }
 
+/* ============================================================= LANE ASSIGNMENT */
+function _assignLanes(groups){
+  const result=new Map();
+  if(!groups.length)return result;
+  const n=groups.length;
+  const trs=groups.map((g,gi)=>({gi,tr:parseGroupTimeRange(g.rows||[])}));
+
+  function overlaps(a,b){
+    if(!a||!b)return false;
+    const as=a.start.h*60+a.start.min, ae=a.end.h*60+a.end.min;
+    const bs=b.start.h*60+b.start.min, be=b.end.h*60+b.end.min;
+    return as<be&&ae>bs;
+  }
+
+  // Build overlap graph → connected components
+  const adj=Array.from({length:n},()=>new Set());
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)
+    if(trs[i].tr&&trs[j].tr&&overlaps(trs[i].tr,trs[j].tr)){adj[i].add(j);adj[j].add(i);}
+
+  const comp=new Array(n).fill(-1); let nc=0;
+  for(let s=0;s<n;s++){
+    if(comp[s]!==-1)continue;
+    const stk=[s];
+    while(stk.length){const c=stk.pop();if(comp[c]!==-1)continue;comp[c]=nc;adj[c].forEach(j=>{if(comp[j]===-1)stk.push(j);});}
+    nc++;
+  }
+  const clusters=Array.from({length:nc},()=>[]);
+  for(let i=0;i<n;i++)clusters[comp[i]].push(i);
+
+  // Greedy lane assignment within each cluster
+  clusters.forEach(cluster=>{
+    const numLanes=Math.min(4,cluster.length);
+    const sorted=cluster.filter(i=>trs[i].tr)
+      .sort((a,b)=>(trs[a].tr.start.h*60+trs[a].tr.start.min)-(trs[b].tr.start.h*60+trs[b].tr.start.min));
+    const laneEnds=[];
+    sorted.forEach(i=>{
+      const sMin=trs[i].tr.start.h*60+trs[i].tr.start.min;
+      const eMin=trs[i].tr.end.h*60+trs[i].tr.end.min;
+      let lane=laneEnds.findIndex(e=>e<=sMin);
+      if(lane===-1)lane=Math.min(laneEnds.length,numLanes-1);
+      laneEnds[lane]=eMin;
+      result.set(i,{lane,numLanes});
+    });
+    cluster.filter(i=>!trs[i].tr).forEach(i=>result.set(i,{lane:0,numLanes:1}));
+  });
+  return result;
+}
+
 function _renderCalGroups(days,container){
   const totalH=CAL2_END-CAL2_START;
   const totalPx=totalH*CAL2_HPX;
@@ -1475,9 +1523,13 @@ function _renderCalGroups(days,container){
       hLines+=`<div style="position:absolute;top:${h*CAL2_HPX}px;left:0;right:0;height:${CAL2_HPX}px;border-bottom:1px solid #F0EDE8;box-sizing:border-box;"></div>`;
       hLines+=`<div style="position:absolute;top:${h*CAL2_HPX+CAL2_HPX/2}px;left:0;right:0;border-bottom:1px dashed #F0EDE8;height:0;"></div>`;
     }
+    // Assign lanes (side-by-side for overlapping groups)
+    const groups=day.groups||[];
+    const laneMap=_assignLanes(groups);
+
     // Group bubbles
     let evHtml='';
-    (day.groups||[]).forEach((g,gi)=>{
+    groups.forEach((g,gi)=>{
       const tr=parseGroupTimeRange(g.rows||[]);
       if(!tr)return;
       const top=Math.round(Math.max(0,(tr.start.h+tr.start.min/60-CAL2_START)*CAL2_HPX));
@@ -1485,14 +1537,13 @@ function _renderCalGroups(days,container){
       const height=Math.max(20,Math.round(endPx)-top-1);
       const title=(g.players||[]).join(' · ')||'(no players)';
       const rows=g.rows||[];
-      const gStartMin=tr.start.h*60+tr.start.min;
-      const gEndMin=tr.end.h*60+tr.end.min;
-      const totalMin=Math.max(1,gEndMin-gStartMin);
-      // Build proportional color bands — one per row, sized by duration
+      const {lane,numLanes}=laneMap.get(gi)||{lane:0,numLanes:1};
+      const lPct=(lane*100/numLanes).toFixed(2);
+      const wPct=(100/numLanes).toFixed(2);
+      // Color bands
       let bandsHtml;
       if(!rows.length){
-        const fb=g.type==='excel'?'#231F20':'#7A7C7F';
-        bandsHtml=`<div style="flex:1;background:${fb}"></div>`;
+        bandsHtml=`<div style="flex:1;background:${g.type==='excel'?'#231F20':'#7A7C7F'}"></div>`;
       }else{
         bandsHtml=rows.map(([ts,act])=>{
           const cat=catOf(act);
@@ -1501,7 +1552,7 @@ function _renderCalGroups(days,container){
           return `<div style="flex:${fv};background:${cat.color};min-height:2px;"></div>`;
         }).join('');
       }
-      evHtml+=`<div class="cal-ev" style="top:${top}px;height:${height}px;display:flex;flex-direction:column;padding:0;overflow:hidden;"
+      evHtml+=`<div class="cal-ev" style="top:${top}px;height:${height}px;left:calc(${lPct}% + 1px);width:calc(${wPct}% - 2px);display:flex;flex-direction:column;padding:0;overflow:hidden;"
         data-di="${di}" data-gi="${gi}" title="${esc(title)}">
         <div style="background:rgba(35,31,32,.82);color:#fff;padding:1px 4px;font-size:8.5px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;line-height:1.5;">${esc(title)}</div>
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">${bandsHtml}</div>
