@@ -234,10 +234,11 @@
   .cal-days{display:flex;flex:1;overflow:hidden}
   .cal-day{flex:1;min-width:80px;position:relative;border-left:1px solid var(--line)}
   .cal-day-head{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.6px;padding:7px 5px 5px;text-align:center;border-bottom:1px solid var(--line);height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;background:#231F20}
-  .cal-day-body{position:relative}
-  .cal-ev{position:absolute;left:2px;right:2px;border-radius:5px;padding:3px 5px;overflow:hidden;cursor:pointer;z-index:2;transition:.1s box-shadow}
-  .cal-ev:hover{box-shadow:0 2px 10px rgba(0,0,0,.22);filter:brightness(.93)}
-  .cal-ev-selected{outline:2.5px solid #2F7DBF!important;outline-offset:1px;z-index:3}
+  .cal-day-body{position:relative;cursor:crosshair}
+  .cal-ev-ghost{position:absolute;left:2px;right:2px;border-radius:4px;background:rgba(35,31,32,.07);border:1.5px dashed #231F20;z-index:10;pointer-events:none;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:9px;font-weight:700;color:#231F20;padding:2px 5px;overflow:hidden;white-space:nowrap;}
+  .cal-ev{position:absolute;left:2px;right:2px;border-radius:5px;overflow:hidden;cursor:pointer;z-index:2;transition:.1s box-shadow;border:1px solid rgba(0,0,0,.13);}
+  .cal-ev:hover{box-shadow:0 2px 10px rgba(0,0,0,.22);filter:brightness(.94);}
+  .cal-ev-selected{outline:2.5px solid #2F7DBF!important;outline-offset:1px;z-index:3;}
   .cal-ev-title{font-size:9.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
   .cal-ev-sub{font-size:8px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
 
@@ -1436,7 +1437,6 @@ function parseGroupTimeRange(rows){
 
 /* ============================================================= CALENDAR RENDER */
 const CAL2_START=6, CAL2_END=21, CAL2_HPX=52;
-const CAL2_COLORS={excel:{bg:'#231F20',text:'#fff'},other:{bg:'#7A7C7F',text:'#fff'}};
 
 function renderCalEditSection(){
   if(_calRendering)return;
@@ -1483,19 +1483,34 @@ function _renderCalGroups(days,container){
       const top=Math.round(Math.max(0,(tr.start.h+tr.start.min/60-CAL2_START)*CAL2_HPX));
       const endPx=(tr.end.h+tr.end.min/60-CAL2_START)*CAL2_HPX;
       const height=Math.max(20,Math.round(endPx)-top-1);
-      const col=CAL2_COLORS[g.type]||CAL2_COLORS.other;
       const title=(g.players||[]).join(' · ')||'(no players)';
-      const firstTime=(g.rows||[])[0]?.[0]||'';
-      evHtml+=`<div class="cal-ev" style="top:${top}px;height:${height}px;background:${col.bg};color:${col.text};"
+      const rows=g.rows||[];
+      const gStartMin=tr.start.h*60+tr.start.min;
+      const gEndMin=tr.end.h*60+tr.end.min;
+      const totalMin=Math.max(1,gEndMin-gStartMin);
+      // Build proportional color bands — one per row, sized by duration
+      let bandsHtml;
+      if(!rows.length){
+        const fb=g.type==='excel'?'#231F20':'#7A7C7F';
+        bandsHtml=`<div style="flex:1;background:${fb}"></div>`;
+      }else{
+        bandsHtml=rows.map(([ts,act])=>{
+          const cat=catOf(act);
+          let fv=1;
+          if(ts){const t=parseEventTimes2(ts);if(t){const dur=(t.end.h*60+t.end.min)-(t.start.h*60+t.start.min);if(dur>0)fv=dur;}}
+          return `<div style="flex:${fv};background:${cat.color};min-height:2px;"></div>`;
+        }).join('');
+      }
+      evHtml+=`<div class="cal-ev" style="top:${top}px;height:${height}px;display:flex;flex-direction:column;padding:0;overflow:hidden;"
         data-di="${di}" data-gi="${gi}" title="${esc(title)}">
-        <div class="cal-ev-title">${esc(title)}</div>
-        ${height>22?`<div class="cal-ev-sub">${esc(firstTime)}</div>`:''}
+        <div style="background:rgba(35,31,32,.82);color:#fff;padding:1px 4px;font-size:8.5px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;line-height:1.5;">${esc(title)}</div>
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">${bandsHtml}</div>
       </div>`;
     });
     daysHtml+=`<div class="cal-day">
       <div class="cal-day-head">${esc(day.day)}${day.date?` <span style="font-family:inherit;font-size:9px;opacity:.6">${esc(day.date)}</span>`:''}
       </div>
-      <div class="cal-day-body" style="height:${totalPx}px;position:relative;overflow:hidden;">
+      <div class="cal-day-body" data-di="${di}" style="height:${totalPx}px;position:relative;overflow:hidden;">
         ${hLines}${evHtml}
       </div>
     </div>`;
@@ -1512,6 +1527,115 @@ function _renderCalGroups(days,container){
       _calSelectGroup(di,gi,el);
     });
   });
+
+  // Drag-to-create on empty space
+  wireCalCreate(container);
+}
+
+/* ============================================================= DRAG-TO-CREATE */
+function _fmt12Cal(totalMin){
+  let h=Math.floor(totalMin/60)%24, m=((totalMin%60)+60)%60;
+  const mer=h<12?'AM':'PM';
+  let hh=h%12; if(hh===0)hh=12;
+  return `${hh}:${String(m).padStart(2,'0')} ${mer}`;
+}
+
+function wireCalCreate(container){
+  container.querySelectorAll('.cal-day-body[data-di]').forEach(body=>{
+    body.addEventListener('pointerdown',ev=>{
+      if(ev.button!==0)return;
+      if(ev.target.closest('.cal-ev'))return; // existing event handles itself
+      onCalCreateStart(ev);
+    });
+  });
+}
+
+function onCalCreateStart(e){
+  // Clear selection/popup
+  document.querySelectorAll('.cal-ev-selected').forEach(el=>el.classList.remove('cal-ev-selected'));
+  _selDi=null; _selGi=null;
+  hideGroupPopup();
+
+  const body=e.currentTarget;
+  const di=+body.dataset.di;
+  const rect=body.getBoundingClientRect();
+  const startY=e.clientY-rect.top;
+  const DRAG_PX=8;
+
+  function yToMins(y){
+    let m=Math.round(((Math.max(0,y)/CAL2_HPX)+CAL2_START)*60/15)*15;
+    return Math.max(CAL2_START*60,Math.min(m,CAL2_END*60));
+  }
+
+  const anchorMins=yToMins(startY);
+  let startMins=anchorMins, endMins=anchorMins+60;
+  let hasDragged=false, ghost=null;
+
+  function ensureGhost(){
+    if(ghost)return;
+    ghost=document.createElement('div');
+    ghost.className='cal-ev-ghost';
+    body.appendChild(ghost);
+  }
+  function updateGhost(){
+    if(!ghost)return;
+    ghost.style.top=((startMins/60-CAL2_START)*CAL2_HPX)+'px';
+    ghost.style.height=Math.max(14,(endMins-startMins)/60*CAL2_HPX)+'px';
+    ghost.textContent=_fmt12Cal(startMins)+' – '+_fmt12Cal(endMins);
+  }
+
+  e.preventDefault();
+  try{body.setPointerCapture(e.pointerId);}catch(_){}
+
+  function move(ev){
+    const y=ev.clientY-rect.top;
+    if(!hasDragged&&Math.abs(y-startY)<DRAG_PX)return;
+    hasDragged=true;
+    ensureGhost();
+    const cur=yToMins(y);
+    if(cur>anchorMins){startMins=anchorMins;endMins=Math.max(anchorMins+15,cur);}
+    else{startMins=Math.max(CAL2_START*60,cur);endMins=anchorMins+60;}
+    endMins=Math.min(endMins,CAL2_END*60);
+    updateGhost();
+  }
+
+  function up(){
+    body.removeEventListener('pointermove',move);
+    body.removeEventListener('pointerup',up);
+    body.removeEventListener('pointercancel',up);
+    try{body.releasePointerCapture(e.pointerId);}catch(_){}
+    if(ghost&&ghost.parentNode)ghost.parentNode.removeChild(ghost);
+    if(!hasDragged)return;
+
+    const wk=ed();
+    if(!wk.days||!wk.days[di])return;
+
+    const timeStr=_fmt12Cal(startMins)+' – '+_fmt12Cal(endMins);
+    const newGroup={type:'excel',players:[],rows:[[timeStr,'On Court']],note:''};
+
+    // Insert in time order
+    const groups=wk.days[di].groups;
+    let insertIdx=groups.length;
+    for(let i=0;i<groups.length;i++){
+      const tr=parseGroupTimeRange(groups[i].rows||[]);
+      if(tr&&(tr.start.h*60+tr.start.min)>startMins){insertIdx=i;break;}
+    }
+    groups.splice(insertIdx,0,newGroup);
+    saveDraft();
+    _calRendering=false;
+    renderCalEditSection();
+    render();
+
+    // Auto-open popup on the new group
+    setTimeout(()=>{
+      const evEl=document.querySelector(`.cal-ev[data-di="${di}"][data-gi="${insertIdx}"]`);
+      if(evEl){evEl.classList.add('cal-ev-selected');showGroupPopup(di,insertIdx,evEl);}
+    },60);
+  }
+
+  body.addEventListener('pointermove',move);
+  body.addEventListener('pointerup',up);
+  body.addEventListener('pointercancel',up);
 }
 
 /* ============================================================= CALENDAR TOGGLE */
