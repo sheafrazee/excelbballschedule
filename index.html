@@ -243,7 +243,7 @@
   .cal-ev-sub{font-size:8px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
 
   /* ============================================================= GROUP SESSION POPUP */
-  .grp-popup{position:fixed;z-index:400;background:#fff;border:1.5px solid #231F20;border-radius:13px;box-shadow:0 10px 36px rgba(0,0,0,.24);width:302px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+  .grp-popup{position:fixed;z-index:400;background:#fff;border:1.5px solid #231F20;border-radius:13px;box-shadow:0 10px 36px rgba(0,0,0,.24);width:302px;max-height:calc(100vh - 24px);display:flex;flex-direction:column;overflow:hidden}
   .grp-pop-hd{background:#231F20;color:#fff;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   .grp-pop-hd span{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.8px}
   .grp-pop-body{padding:14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:0}
@@ -1766,10 +1766,14 @@ function showGroupPopup(di,gi,evEl){
 
   const pop=document.createElement('div');
   pop.className='grp-popup'; pop.id='groupPopup';
+  pop.style.visibility='hidden'; // hide until positioned
   pop.innerHTML=`
     <div class="grp-pop-hd">
       <span>Edit Session</span>
-      <button id="gpClose" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;padding:0 2px;opacity:.8">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button id="gpDel" title="Delete session" style="background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;">🗑 Delete</button>
+        <button id="gpClose" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;padding:0 2px;opacity:.8">✕</button>
+      </div>
     </div>
     <div class="grp-pop-body">
       <span class="gp-lbl">Player / Session Title</span>
@@ -1785,18 +1789,29 @@ function showGroupPopup(di,gi,evEl){
       </div>
     </div>
     <div class="grp-pop-ft">
-      <button class="gp-del" id="gpDel">🗑 Delete</button>
       <button class="gp-done" id="gpDone">Done</button>
     </div>`;
   document.body.appendChild(pop);
 
-  // Position next to event element
-  const popW=302;
-  const rect=evEl.getBoundingClientRect();
-  let left=rect.right+12, top=rect.top;
-  if(left+popW>window.innerWidth-8)left=rect.left-popW-12;
-  pop.style.left=Math.max(8,left)+'px';
-  pop.style.top=Math.max(8,Math.min(top,window.innerHeight-420))+'px';
+  // Position after DOM is ready so we can measure actual height
+  requestAnimationFrame(()=>{
+    const popW=pop.offsetWidth||302;
+    const popH=pop.offsetHeight||400;
+    const rect=evEl.getBoundingClientRect();
+    const vw=window.innerWidth, vh=window.innerHeight;
+    // Horizontal: prefer right of event, flip left if needed
+    let left=rect.right+12;
+    if(left+popW>vw-8)left=rect.left-popW-12;
+    left=Math.max(8,Math.min(left,vw-popW-8));
+    // Vertical: align with top of event, push up if too close to bottom
+    let top=rect.top;
+    if(top+popH>vh-8)top=vh-popH-8;
+    top=Math.max(8,top);
+    pop.style.left=left+'px';
+    pop.style.top=top+'px';
+    pop.style.visibility='visible';
+    pop.querySelector('#gpPlayers').focus();
+  });
 
   // --- Save state helper ---
   function saveState(){
