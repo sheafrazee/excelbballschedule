@@ -235,12 +235,15 @@
   .cal-day{flex:1;min-width:160px;position:relative;border-left:1px solid var(--line)}
   .cal-day-head{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.6px;padding:7px 5px 5px;text-align:center;border-bottom:1px solid var(--line);height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;background:#231F20}
   .cal-day-body{position:relative;cursor:crosshair}
-  .cal-ev-ghost{position:absolute;left:2px;right:2px;border-radius:4px;background:rgba(35,31,32,.07);border:1.5px dashed #231F20;z-index:10;pointer-events:none;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:9px;font-weight:700;color:#231F20;padding:2px 5px;overflow:hidden;white-space:nowrap;}
-  .cal-ev{position:absolute;left:2px;right:2px;border-radius:5px;overflow:hidden;cursor:pointer;z-index:2;transition:.1s box-shadow;border:1px solid rgba(0,0,0,.13);}
-  .cal-ev:hover{box-shadow:0 2px 10px rgba(0,0,0,.22);filter:brightness(.94);}
+  .cal-ev-ghost{position:absolute;left:2px;right:2px;border-radius:3px;background:rgba(35,31,32,.08);border:1.5px dashed #231F20;z-index:10;pointer-events:none;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:9px;font-weight:700;color:#231F20;padding:2px 5px;overflow:hidden;white-space:nowrap;}
+  .cal-ev{position:absolute;border-radius:5px;overflow:hidden;z-index:2;border:1px solid rgba(0,0,0,.13);}
+  .cal-ev-drag{cursor:grab;touch-action:none;transition:box-shadow .12s;}
+  .cal-ev-drag:hover{box-shadow:0 0 0 1.5px rgba(0,0,0,.22) inset, 0 3px 12px rgba(0,0,0,.18);}
+  .cal-ev-dragging{cursor:grabbing!important;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.3)!important;opacity:.92;transform:scale(1.01);}
   .cal-ev-selected{outline:2.5px solid #2F7DBF!important;outline-offset:1px;z-index:3;}
-  .cal-ev-title{font-size:9.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
-  .cal-ev-sub{font-size:8px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+  .cal-ev-resize{position:absolute;bottom:0;left:0;right:0;height:7px;cursor:ns-resize;touch-action:none;border-radius:0 0 5px 5px;z-index:5;}
+  .cal-ev-resize:hover{background:rgba(0,0,0,.22);}
+  .cal-ev-timelive{display:none;background:rgba(35,31,32,.75);color:#fff;padding:0px 4px;font-size:8px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;white-space:nowrap;flex-shrink:0;line-height:1.5;letter-spacing:.2px;}
 
   /* ============================================================= GROUP SESSION POPUP */
   .grp-popup{position:fixed;z-index:400;background:#fff;border:1.5px solid #231F20;border-radius:13px;box-shadow:0 10px 36px rgba(0,0,0,.24);width:302px;max-height:calc(100vh - 24px);display:flex;flex-direction:column;overflow:hidden}
@@ -1540,6 +1543,8 @@ function _renderCalGroups(days,container){
       const {lane,numLanes}=laneMap.get(gi)||{lane:0,numLanes:1};
       const lPct=(lane*100/numLanes).toFixed(2);
       const wPct=(100/numLanes).toFixed(2);
+      const startMin=tr.start.h*60+tr.start.min;
+      const endMin=tr.end.h*60+tr.end.min;
       // Color bands
       let bandsHtml;
       if(!rows.length){
@@ -1552,10 +1557,12 @@ function _renderCalGroups(days,container){
           return `<div style="flex:${fv};background:${cat.color};min-height:2px;"></div>`;
         }).join('');
       }
-      evHtml+=`<div class="cal-ev" style="top:${top}px;height:${height}px;left:calc(${lPct}% + 1px);width:calc(${wPct}% - 2px);display:flex;flex-direction:column;padding:0;overflow:hidden;"
-        data-di="${di}" data-gi="${gi}" title="${esc(title)}">
-        <div style="background:rgba(35,31,32,.82);color:#fff;padding:1px 4px;font-size:8.5px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;line-height:1.5;">${esc(title)}</div>
+      evHtml+=`<div class="cal-ev cal-ev-drag" style="top:${top}px;height:${height}px;left:calc(${lPct}% + 1px);width:calc(${wPct}% - 2px);display:flex;flex-direction:column;padding:0;overflow:hidden;"
+        data-di="${di}" data-gi="${gi}" data-startmin="${startMin}" data-endmin="${endMin}" data-hourpx="${CAL2_HPX}" title="${esc(title)}">
+        <div class="cal-ev-hd" style="background:rgba(35,31,32,.82);color:#fff;padding:1px 4px;font-size:8.5px;font-weight:700;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;line-height:1.5;">${esc(title)}</div>
+        <div class="cal-ev-timelive"></div>
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">${bandsHtml}</div>
+        <div class="cal-ev-resize"></div>
       </div>`;
     });
     daysHtml+=`<div class="cal-day">
@@ -1570,17 +1577,240 @@ function _renderCalGroups(days,container){
 
   container.innerHTML=`<div class="cal-wrap"><div class="cal-grid">${timeHtml}${daysHtml}</div></div>`;
 
-  // Bind click on group bubbles
-  container.querySelectorAll('.cal-ev').forEach(el=>{
-    el.addEventListener('click',e=>{
-      e.stopPropagation();
-      const di=+el.dataset.di,gi=+el.dataset.gi;
-      _calSelectGroup(di,gi,el);
-    });
+  // Click on background closes popup
+  container.querySelector('.cal-wrap').addEventListener('pointerdown',e=>{
+    if(!e.target.closest('.cal-ev'))hideGroupPopup();
   });
+
+  // Bubble drag (handles both click-to-select and drag-to-move)
+  wireCalBubbleDrag(container);
 
   // Drag-to-create on empty space
   wireCalCreate(container);
+}
+
+/* ============================================================= BUBBLE DRAG (within/across days) */
+let _calSel=null; // persists across renders: {di,gi}
+
+function wireCalBubbleDrag(container){
+  const dayBodies=[...container.querySelectorAll('.cal-day-body[data-di]')];
+  container.querySelectorAll('.cal-ev.cal-ev-drag').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      if(e.button!==0)return;
+      if(e.target.closest('.cal-ev-resize'))return;
+      e.stopPropagation();
+      onCalBubbleDragStart(e,dayBodies);
+    });
+  });
+  container.querySelectorAll('.cal-ev-resize').forEach(handle=>{
+    handle.addEventListener('pointerdown',e=>{
+      if(e.button!==0)return;
+      e.stopPropagation();
+      onCalResizeStart(e);
+    });
+  });
+  if(_calSel){
+    const sel=container.querySelector(`.cal-ev[data-di="${_calSel.di}"][data-gi="${_calSel.gi}"]`);
+    if(sel)sel.classList.add('cal-ev-selected');
+    else _calSel=null;
+  }
+}
+
+function onCalBubbleDragStart(e,dayBodies){
+  const el=e.currentTarget;
+  const srcDi=+el.dataset.di, srcGi=+el.dataset.gi;
+  const wk=ed();
+  const g=wk.days[srcDi]&&wk.days[srcDi].groups[srcGi];
+  if(!g)return;
+  const tr=parseGroupTimeRange(g.rows||[]);
+  if(!tr)return;
+
+  const origStartMin=tr.start.h*60+tr.start.min;
+  const origDurMin=(tr.end.h*60+tr.end.min)-origStartMin;
+  const origRect=el.getBoundingClientRect();
+  const grabOffY=e.clientY-origRect.top;
+  const isTouch=e.pointerType==='touch';
+  const HOLD_MS=420, MOVE_THRESHOLD=8, DRAG_PX=isTouch?0:7;
+
+  const dayData=dayBodies.map(b=>({di:+b.dataset.di,el:b,rect:b.getBoundingClientRect()}));
+  const timeEl=el.querySelector('.cal-ev-timelive');
+
+  let dragging=false,armed=false,holdTimer=null,maxMoved=0;
+  let ghost=null,dropZone=null;
+
+  function snapMins(relY){
+    return Math.round(((Math.max(0,relY)/CAL2_HPX)+CAL2_START)*60/15)*15;
+  }
+  function getTarget(cx,cy){
+    for(const d of dayData){if(cx>=d.rect.left&&cx<=d.rect.right)return d;}
+    let best=dayData[0],bd=Infinity;
+    dayData.forEach(d=>{const m=(d.rect.left+d.rect.right)/2;const dist=Math.abs(cx-m);if(dist<bd){bd=dist;best=d;}});
+    return best;
+  }
+
+  function startDrag(){
+    dragging=true;
+    el.classList.add('cal-ev-dragging');
+    el.style.opacity='0.2';
+    ghost=el.cloneNode(true);
+    ghost.removeAttribute('data-di');ghost.removeAttribute('data-gi');
+    Object.assign(ghost.style,{
+      position:'fixed',width:origRect.width+'px',height:origRect.height+'px',
+      left:origRect.left+'px',top:origRect.top+'px',
+      zIndex:'600',pointerEvents:'none',opacity:'0.92',
+      boxShadow:'0 10px 28px rgba(0,0,0,.35)',transform:'rotate(1deg) scale(1.02)',
+      transition:'none',borderRadius:'5px',overflow:'hidden'
+    });
+    document.body.appendChild(ghost);
+    dropZone=document.createElement('div');
+    Object.assign(dropZone.style,{
+      position:'absolute',left:'2px',right:'2px',borderRadius:'5px',
+      background:'rgba(47,125,191,.1)',border:'2px dashed #2F7DBF',
+      zIndex:'4',pointerEvents:'none'
+    });
+  }
+
+  if(isTouch){
+    holdTimer=setTimeout(()=>{
+      holdTimer=null;armed=true;
+      if(navigator.vibrate)navigator.vibrate(32);
+      startDrag();
+    },HOLD_MS);
+  }
+
+  function cancelHold(){if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}}
+
+  e.preventDefault();
+  try{el.setPointerCapture(e.pointerId);}catch(_){}
+
+  function move(ev){
+    const dist=Math.sqrt((ev.clientX-e.clientX)**2+(ev.clientY-e.clientY)**2);
+    if(dist>maxMoved)maxMoved=dist;
+    if(!dragging){
+      if(isTouch){if(dist>MOVE_THRESHOLD)cancelHold();return;}
+      if(dist<DRAG_PX)return;
+      if(!armed){armed=true;startDrag();}
+    }
+    if(!dragging)return;
+    ghost.style.left=(origRect.left+(ev.clientX-e.clientX))+'px';
+    ghost.style.top=(origRect.top+(ev.clientY-e.clientY))+'px';
+    const tgt=getTarget(ev.clientX,ev.clientY);
+    const snapped=Math.max(CAL2_START*60,Math.min((CAL2_END-1)*60,
+      snapMins((ev.clientY-grabOffY)-tgt.rect.top)));
+    const ghostTL=ghost.querySelector('.cal-ev-timelive');
+    if(ghostTL){ghostTL.style.display='block';ghostTL.textContent=_fmt12Cal(snapped)+' \u2013 '+_fmt12Cal(snapped+origDurMin);}
+    if(dropZone.parentNode!==tgt.el){
+      if(dropZone.parentNode)dropZone.parentNode.removeChild(dropZone);
+      tgt.el.appendChild(dropZone);
+    }
+    dropZone.style.top=Math.max(0,(snapped/60-CAL2_START)*CAL2_HPX)+'px';
+    dropZone.style.height=Math.max(14,origDurMin/60*CAL2_HPX)+'px';
+  }
+
+  function cleanup(){
+    cancelHold();
+    try{el.releasePointerCapture(e.pointerId);}catch(_){}
+    el.removeEventListener('pointermove',move);
+    el.removeEventListener('pointerup',up);
+    el.removeEventListener('pointercancel',cancel);
+    el.classList.remove('cal-ev-dragging');
+    el.style.opacity='';
+    if(ghost){ghost.remove();ghost=null;}
+    if(dropZone){if(dropZone.parentNode)dropZone.parentNode.removeChild(dropZone);dropZone=null;}
+  }
+
+  function cancel(){cleanup();}
+
+  function up(ev){
+    if(!dragging){
+      cleanup();
+      if(isTouch&&maxMoved>10)return;
+      _calSelectGroup(srcDi,srcGi,el);
+      return;
+    }
+    const tgt=getTarget(ev.clientX,ev.clientY);
+    const newStart=Math.max(CAL2_START*60,Math.min((CAL2_END-1)*60,
+      snapMins((ev.clientY-grabOffY)-tgt.rect.top)));
+    const deltaMin=newStart-origStartMin;
+    cleanup();
+    const wk2=ed();
+    const srcDay=wk2.days[srcDi];
+    if(!srcDay){_calRendering=false;renderCalEditSection();return;}
+    const[group]=srcDay.groups.splice(srcGi,1);
+    if(deltaMin!==0){
+      group.rows=(group.rows||[]).map(([ts,act])=>{
+        if(!ts)return[ts,act];
+        const t=parseEventTimes2(ts);if(!t)return[ts,act];
+        const newS=Math.max(CAL2_START*60,Math.min((CAL2_END-1)*60,t.start.h*60+t.start.min+deltaMin));
+        const isRng=/\d\s*[-\u2013\u2014]\s*\d/.test(ts)||/\bto\b|\buntil\b/i.test(ts);
+        if(isRng){const newE=Math.max(newS+15,Math.min(CAL2_END*60,t.end.h*60+t.end.min+deltaMin));return[_fmt12Cal(newS)+' \u2013 '+_fmt12Cal(newE),act];}
+        return[_fmt12Cal(newS),act];
+      });
+    }
+    const tgtDay=wk2.days[tgt.di];
+    if(!tgtDay){_calRendering=false;renderCalEditSection();return;}
+    const newTr=parseGroupTimeRange(group.rows||[]);
+    const nStart=newTr?newTr.start.h*60+newTr.start.min:newStart;
+    let insertIdx=tgtDay.groups.length;
+    for(let i=0;i<tgtDay.groups.length;i++){
+      const t2=parseGroupTimeRange(tgtDay.groups[i].rows||[]);
+      if(t2&&(t2.start.h*60+t2.start.min)>nStart){insertIdx=i;break;}
+    }
+    if(tgt.di===srcDi&&insertIdx>srcGi)insertIdx--;
+    tgtDay.groups.splice(insertIdx,0,group);
+    _calSel={di:tgt.di,gi:insertIdx};
+    saveDraft();_calRendering=false;renderCalEditSection();render();
+  }
+
+  el.addEventListener('pointermove',move);
+  el.addEventListener('pointerup',up);
+  el.addEventListener('pointercancel',cancel);
+}
+
+/* ============================================================= RESIZE (bottom handle) */
+function onCalResizeStart(e){
+  e.stopPropagation();
+  const handle=e.currentTarget;
+  const el=handle.parentElement;
+  const di=+el.dataset.di, gi=+el.dataset.gi;
+  const startMin=+el.dataset.startmin;
+  const body=el.closest('.cal-day-body');
+  const bodyRect=body.getBoundingClientRect();
+  const timeEl=el.querySelector('.cal-ev-timelive');
+  let endMin=+el.dataset.endmin||startMin+60;
+  function yToEnd(cy){
+    let m=Math.round(((Math.max(0,cy-bodyRect.top)/CAL2_HPX)+CAL2_START)*60/15)*15;
+    return Math.max(startMin+15,Math.min(m,CAL2_END*60));
+  }
+  e.preventDefault();
+  try{handle.setPointerCapture(e.pointerId);}catch(_){}
+  if(timeEl){timeEl.style.display='block';timeEl.textContent=_fmt12Cal(startMin)+' \u2013 '+_fmt12Cal(endMin);}
+  function move(ev){
+    endMin=yToEnd(ev.clientY);
+    el.style.height=Math.max(14,(endMin-startMin)/60*CAL2_HPX)+'px';
+    if(timeEl)timeEl.textContent=_fmt12Cal(startMin)+' \u2013 '+_fmt12Cal(endMin);
+  }
+  function up(){
+    handle.removeEventListener('pointermove',move);
+    handle.removeEventListener('pointerup',up);
+    handle.removeEventListener('pointercancel',up);
+    try{handle.releasePointerCapture(e.pointerId);}catch(_){}
+    if(timeEl)timeEl.style.display='none';
+    const wk2=ed();
+    const g2=wk2.days[di]&&wk2.days[di].groups[gi];
+    if(!g2){_calRendering=false;renderCalEditSection();return;}
+    const rows=g2.rows||[];
+    let lastIdx=-1;
+    for(let i=rows.length-1;i>=0;i--){const t=parseEventTimes2(rows[i][0]);if(t){lastIdx=i;break;}}
+    if(lastIdx>=0){
+      const t=parseEventTimes2(rows[lastIdx][0]);
+      rows[lastIdx][0]=_fmt12Cal(t.start.h*60+t.start.min)+' \u2013 '+_fmt12Cal(endMin);
+    }
+    saveDraft();_calRendering=false;renderCalEditSection();render();
+  }
+  handle.addEventListener('pointermove',move);
+  handle.addEventListener('pointerup',up);
+  handle.addEventListener('pointercancel',up);
 }
 
 /* ============================================================= DRAG-TO-CREATE */
@@ -1717,18 +1947,19 @@ function _matchPreset(activity){
   return null;
 }
 
-let _selDi=null,_selGi=null;
+let _selDi=null,_selGi=null; // kept for compat
 
 function _calSelectGroup(di,gi,evEl){
   document.querySelectorAll('.cal-ev-selected').forEach(e=>e.classList.remove('cal-ev-selected'));
-  if(_selDi===di&&_selGi===gi){hideGroupPopup();return;}
+  if(_calSel&&_calSel.di===di&&_calSel.gi===gi){hideGroupPopup();return;}
   evEl.classList.add('cal-ev-selected');
+  _calSel={di,gi};
   showGroupPopup(di,gi,evEl);
 }
 
 function showGroupPopup(di,gi,evEl){
   hideGroupPopup();
-  _selDi=di; _selGi=gi;
+  _selDi=di; _selGi=gi; _calSel={di,gi};
   const wk=ed(); const g=wk.days[di]&&wk.days[di].groups[gi];
   if(!g)return;
 
@@ -1888,6 +2119,9 @@ function showGroupPopup(di,gi,evEl){
 
   // Players change
   pop.querySelector('#gpPlayers').addEventListener('change',saveState);
+  pop.querySelector('#gpPlayers').addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();hideGroupPopup();}
+  });
 
   // Done
   pop.querySelector('#gpDone').addEventListener('click',()=>{saveState();hideGroupPopup();});
@@ -1898,6 +2132,11 @@ function showGroupPopup(di,gi,evEl){
     const wk2=ed(); if(wk2.days[di])wk2.days[di].groups.splice(gi,1);
     saveDraft(); hideGroupPopup(); renderCalEditSection(); render();
   });
+
+  // Escape key closes popup globally
+  function _escClose(e){if(e.key==='Escape')hideGroupPopup();}
+  document.addEventListener('keydown',_escClose);
+  const _origHide=hideGroupPopup;
 
   // Close
   pop.querySelector('#gpClose').addEventListener('click',hideGroupPopup);
@@ -1913,9 +2152,11 @@ function _popOutside2(e){
 }
 function hideGroupPopup(){
   document.removeEventListener('pointerdown',_popOutside2,true);
+  // Remove any stray escape listeners
+  document.querySelectorAll('[data-esc-listener]').forEach(()=>{});
   const pop=document.getElementById('groupPopup');
   if(pop)pop.remove();
-  _selDi=null; _selGi=null;
+  _selDi=null; _selGi=null; _calSel=null;
   document.querySelectorAll('.cal-ev-selected').forEach(e=>e.classList.remove('cal-ev-selected'));
 }
 
