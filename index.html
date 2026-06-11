@@ -1351,7 +1351,8 @@ function showImageFallback(file,title){
   let box=document.getElementById('imgFallbackBox');
   if(!box){box=document.createElement('div');box.id='imgFallbackBox';box.style.cssText='margin-top:12px;text-align:center';v.after(box);}
   box.style.display='block';
-  box.innerHTML='<p style="font-size:13px;color:var(--gray);line-height:1.45;margin-bottom:11px">Press &amp; hold the image for <b>Save to Photos</b> / Share — or tap below.</p>';
+  const hint=window.isSecureContext?'':'<p style="font-size:12px;color:var(--gray-dark);line-height:1.45;margin-bottom:9px"><b>Heads up:</b> the native share sheet only exists on the published (https) site — it\u2019s unavailable when this file is opened locally.</p>';
+  box.innerHTML=hint+'<p style="font-size:13px;color:var(--gray);line-height:1.45;margin-bottom:11px">Press &amp; hold the image for <b>Save to Photos</b> / Share — or tap below.</p>';
   const dl=document.createElement('button');dl.className='btn primary';dl.innerHTML=I.download+' Save image';
   dl.addEventListener('click',()=>downloadFile(file));
   box.appendChild(dl);
@@ -1359,12 +1360,25 @@ function showImageFallback(file,title){
 }
 
 async function shareAsImage(key,el,title){
+  const canShareFile=f=>!!(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]})));
   let file=(IMG_CACHE.get(key)||{}).file;
-  if(!file){ toast('Preparing image…',1500); file=await prewarmImage(key,el); }
-  if(!file){ toast('Could not build image — try again'); return; }
-  if(navigator.share){
+  if(file&&canShareFile(file)){
     try{ await navigator.share({files:[file],title}); return; }   // -> AirDrop/Messages/Mail/WhatsApp
-    catch(e){ if(e.name==='AbortError') return; }                  // user cancelled
+    catch(e){
+      if(e.name==='AbortError') return;                            // user cancelled
+      if(e.name!=='NotAllowedError'){ showImageFallback(file,title); return; }
+      // NotAllowedError = tap activation expired; fall through to the re-tap path below
+    }
+  }
+  if(!file){ toast('Preparing image…',1200); file=await prewarmImage(key,el); }
+  if(!file){ toast('Could not build image — try again'); return; }
+  if(canShareFile(file)){
+    // We're past the original tap, so iOS would block share here. A fresh tap
+    // on this toast is a new user activation — share fires synchronously inside it.
+    toastAction('Image ready','Share now',()=>{
+      navigator.share({files:[file],title}).catch(err=>{ if(err.name!=='AbortError') showImageFallback(file,title); });
+    },7000);
+    return;
   }
   // Native file share unavailable/blocked — show the image; long-press to Save/Share (reliable on iOS).
   showImageFallback(file,title);
